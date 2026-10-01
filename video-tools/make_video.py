@@ -330,28 +330,46 @@ buf += silence(OUTRO)
 with wave.open(f"{WORK}/narration.wav", "wb") as w:
     w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes(buf)
 
-# soft ambient pad (Am - F - C - G), very quiet
-def pad(total):
-    chords = [(220.0, 261.63, 329.63), (174.61, 220.0, 261.63), (261.63, 329.63, 392.0), (196.0, 246.94, 293.66)]
-    seg = 8.0
-    out = bytearray()
-    for i in range(int(32 * SR)):
-        tt = i / SR
-        c = chords[int(tt // seg) % 4]
-        ph = (tt % seg) / seg
-        env = math.sin(math.pi * ph) ** 0.6
-        v = sum(math.sin(2 * math.pi * f * tt) + 0.3 * math.sin(4 * math.pi * f * tt) for f in c) / 3.9
-        v += 0.5 * math.sin(2 * math.pi * (c[0] / 2) * tt)
-        v *= env * (0.75 + 0.25 * math.sin(2 * math.pi * 0.25 * tt))
-        out += struct.pack("<h", int(v * 9000))
-    loop = bytes(out)
-    reps = int(total // 32) + 1
-    return (loop * reps)[: int(total * SR) * 2]
-with wave.open(f"{WORK}/music.wav", "wb") as w:
-    w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes(pad(TOTAL + 1))
-subprocess.run([FF, "-y", "-loglevel", "error", "-i", f"{WORK}/narration.wav", "-i", f"{WORK}/music.wav",
-    "-filter_complex", f"[1:a]volume=0.55,lowpass=f=1200,afade=t=in:d=2,afade=t=out:st={TOTAL-3}:d=3[m];[0:a][m]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.95[a]",
-    "-map", "[a]", f"{WORK}/mix.wav"], check=True)
+if MODE == "full":
+    # lo-fi -> energetic build (part 5) -> cinematic finale, ducked under the narration
+    import numpy as np
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import music
+    mus = music.build(TOTAL + 0.5, SCENES[4]["start"], SCENES[5]["start"])
+    with wave.open(f"{WORK}/music.wav", "wb") as w:
+        w.setnchannels(2); w.setsampwidth(2); w.setframerate(music.SR)
+        w.writeframes((mus * 32767).astype("<i2").tobytes())
+    vol = "0.17*(1+2.0*max(0,min(1,(5.5-t)/1.5))+2.0*max(0,min(1,(t-%.2f)/1.5)))" % (TOTAL - 8.4)
+    flt = ("[0:a]aformat=channel_layouts=stereo,asplit[n1][n2];"
+           f"[1:a]volume='{vol}':eval=frame[m];"
+           "[m][n1]sidechaincompress=threshold=0.02:ratio=3:attack=30:release=500:makeup=1[mc];"
+           f"[n2][mc]amix=inputs=2:normalize=0,alimiter=limit=0.95,afade=t=out:st={TOTAL-2.5}:d=2.5[a]")
+    subprocess.run([FF, "-y", "-loglevel", "error", "-i", f"{WORK}/narration.wav", "-i", f"{WORK}/music.wav",
+                    "-filter_complex", flt, "-map", "[a]", f"{WORK}/mix.wav"], check=True)
+else:
+    # soft ambient pad (Am - F - C - G), very quiet
+    def pad(total):
+        chords = [(220.0, 261.63, 329.63), (174.61, 220.0, 261.63), (261.63, 329.63, 392.0), (196.0, 246.94, 293.66)]
+        seg = 8.0
+        out = bytearray()
+        for i in range(int(32 * SR)):
+            tt = i / SR
+            c = chords[int(tt // seg) % 4]
+            ph = (tt % seg) / seg
+            env = math.sin(math.pi * ph) ** 0.6
+            v = sum(math.sin(2 * math.pi * f * tt) + 0.3 * math.sin(4 * math.pi * f * tt) for f in c) / 3.9
+            v += 0.5 * math.sin(2 * math.pi * (c[0] / 2) * tt)
+            v *= env * (0.75 + 0.25 * math.sin(2 * math.pi * 0.25 * tt))
+            out += struct.pack("<h", int(v * 9000))
+        loop = bytes(out)
+        reps = int(total // 32) + 1
+        return (loop * reps)[: int(total * SR) * 2]
+    with wave.open(f"{WORK}/music.wav", "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes(pad(TOTAL + 1))
+    subprocess.run([FF, "-y", "-loglevel", "error", "-i", f"{WORK}/narration.wav", "-i", f"{WORK}/music.wav",
+        "-filter_complex", f"[1:a]volume=0.55,lowpass=f=1200,afade=t=in:d=2,afade=t=out:st={TOTAL-3}:d=3[m];[0:a][m]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.95[a]",
+        "-map", "[a]", f"{WORK}/mix.wav"], check=True)
+
 
 # ---------------- video ----------------
 proc = subprocess.Popen([FF, "-y", "-loglevel", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS),
