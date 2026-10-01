@@ -1,6 +1,6 @@
 """Builds the "رحلة التغيير" video from narration clips + background images.
 
-Usage: python make_video.py <work_dir> <output.mp4>
+Usage: python make_video.py <work_dir> <output.mp4> [short|full]
 work_dir must contain audio/s1..s6.mp3, bg/b1..b6.jpg and a Arabic-capable font
 (falls back to DejaVu Sans).
 """
@@ -10,6 +10,8 @@ import arabic_reshaper
 from bidi.algorithm import get_display
 
 WORK, OUT = sys.argv[1], sys.argv[2]
+MODE = sys.argv[3] if len(sys.argv) > 3 else "short"   # "short" (~3 min) or "full" (~10 min)
+import json
 FF = open(os.path.join(WORK, "ff.txt")).read().strip()
 W, H, FPS = 1280, 720, 24
 SR = 44100
@@ -81,6 +83,46 @@ SCENES = [
       text="في النهاية، تذكر أن أعظم استثمار يمكنك القيام به في حياتك ليس في الأسهم أو العقارات، بل هو الاستثمار في عقلك وشخصيتك. أنت المشروع الأهم في حياتك، فلا تهمله. أخبروني في التعليقات: ما هي المهارة التي ستبدأون بتعلمها من اليوم؟",
       key_at="أنت المشروع"),
 ]
+
+if MODE == "full":
+    NARR = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "narration_full.json")))
+    KEYS = {
+     0: [("كلمة واحدة", "تطوير الذات", "عملية مستمرة لحياة أكثر إشباعاً"),
+         ("تخيل شخصين", "قوة التراكم", "دقائق صغيرة تصنع فارقاً كبيراً"),
+         ("في هذا الفيديو سنتحدث", "أربعة محاور", "الثقة · النجاح · البداية · التحدي")],
+     1: [("التصالح مع نفسك", "التصالح مع نفسك", None),
+         ("وعندما تتعلم كيف تضع", "حدود صحية", "احمِ طاقتك ووقتك"),
+         ("الثقة تأتي من الإنجازات الصغيرة", "الثقة تأتي من الإنجازات الصغيرة", None),
+         ("جرّب أن تكتب", "ثلاثة إنجازات كل مساء", "مهما كانت صغيرة")],
+     2: [("أصبح التعلم المستمر", "التعلم المستمر", "العملة الوحيدة المضمونة"),
+         ("الشهادة قد تفتح", "المهارات تبقيك في الغرفة", None),
+         ("تطوير مهاراتك، سواء", "مهارات تقنية وناعمة", "برمجة · تحليل · تواصل · قيادة"),
+         ("وهذا ينعكس مباشرة", "دخل أعلى وفرص أكبر", None),
+         ("خصص جزءاً من دخلك", "استثمر في مهاراتك", "يعود عليك أضعافاً مضاعفة")],
+     3: [],
+     4: [("أكبر عدو", "منطقة الراحة", "سجن جميل بلا قضبان"),
+         ("الحقيقة هي أنك", "لن تكون مستعداً 100%", None),
+         ("السر هو أن", "ابدأ وأنت خائف", None),
+         ("وإن شعرت بالرغبة", "قاعدة الخمس دقائق", "ابدأ لخمس دقائق فقط"),
+         ("التسويف هو مقبرة", "التسويف مقبرة الأحلام", None)],
+     5: [("أعظم استثمار", "الاستثمار في نفسك", "أعظم استثمار في حياتك"),
+         ("أنت المشروع الأهم", "أنت المشروع الأهم في حياتك", None),
+         ("ابدأ اليوم", "ابدأ اليوم", "ولو بخطوة صغيرة")],
+    }
+    for i, sc in enumerate(SCENES):
+        sc["text"] = NARR[str(i + 1)]
+        sc["keys"] = KEYS[i]
+        sc["key"] = None
+        sc["sub"] = None
+else:
+    for sc in SCENES:
+        if sc.get("key"):
+            sc["keys"] = [(sc["key_at"], sc["key"], sc["sub"])]
+        else:
+            sc["keys"] = []
+AUDIO_DIR = f"{WORK}/full/audio" if MODE == "full" else f"{WORK}/audio"
+BG_SETS = {i: [f"{WORK}/bg/b{i+1}.jpg"] + ([f"{WORK}/bg/c{i+1}.jpg"] if MODE == "full" else []) for i in range(6)}
+
 INTRO, GAP, OUTRO = 4.5, 0.6, 7.0
 
 def chunks(text, maxc=62):
@@ -100,8 +142,9 @@ def chunks(text, maxc=62):
 # ---------------- timeline ----------------
 t = INTRO
 for i, s in enumerate(SCENES):
-    s["audio"] = f"{WORK}/audio/s{i+1}.mp3"
-    s["bg"] = Image.open(f"{WORK}/bg/b{i+1}.jpg").convert("RGB")
+    s["audio"] = f"{AUDIO_DIR}/s{i+1}.mp3"
+    s["bgs"] = [Image.open(p).convert("RGB") for p in BG_SETS[i]]
+    s["bg"] = s["bgs"][0]
     s["dur"] = dur(s["audio"])
     s["start"] = t
     n = len(s["text"])
@@ -112,8 +155,12 @@ for i, s in enumerate(SCENES):
                      s["start"] + 0.05 + s["dur"] * (idx + len(c)) / n, c))
         pos = idx + len(c)
     s["subs"] = subs
-    if s.get("key_at"):
-        s["key_t"] = s["start"] + s["dur"] * s["text"].find(s["key_at"]) / n
+    kt = []
+    for trig, big, small in s["keys"]:
+        pos_k = s["text"].find(trig)
+        assert pos_k >= 0, trig
+        kt.append(s["start"] + s["dur"] * pos_k / n)
+    s["key_times"] = kt
     if s.get("items"):
         s["item_t"] = [s["start"] + s["dur"] * s["text"].find(it[0]) / n for it in s["items"]]
     t += s["dur"] + GAP
@@ -156,15 +203,16 @@ def header_layer(sc, idx):
         d.ellipse((60 + k * 28, 52, 74 + k * 28, 66), fill=col if k <= idx else (255, 255, 255, 70))
     return L
 
-def key_layer(sc):
+def key_layer(sc, k):
+    _, big, small = sc["keys"][k]
     L = rgba(); d = ImageDraw.Draw(L)
-    f = font(78 if len(sc["key"]) < 20 else 62)
-    lines = wrap(sc["key"], f, W - 160)
-    y = 250 - (len(lines) - 1) * 50 - (30 if sc["sub"] else 0)
+    f = font(78 if len(big) < 20 else 62)
+    lines = wrap(big, f, W - 160)
+    y = 250 - (len(lines) - 1) * 50 - (30 if small else 0)
     for ln in lines:
         draw_center(d, ln, f, y, sc["color"]); y += 100
-    if sc["sub"]:
-        draw_center(d, sc["sub"], font(40, False), y + 5, WHITE)
+    if small:
+        draw_center(d, small, font(40, False), y + 5, WHITE)
     return L
 
 def item_layer(sc, k):
@@ -236,11 +284,22 @@ def frame(t):
     idx = max(i for i, s in enumerate(SCENES) if s["start"] <= t)
     s = SCENES[idx]
     p = min(1, max(0, (t - s["start"]) / (s["dur"] + GAP)))
-    base = bg_frame(s["bg"], p, idx % 2)
+    if len(s["bgs"]) > 1:
+        mid = s["start"] + s["dur"] / 2
+        a = ease(max(0.0, min(1.0, (t - (mid - 0.8)) / 1.6)))
+        base = bg_frame(s["bgs"][0], p, idx % 2)
+        if a > 0:
+            base = Image.blend(base, bg_frame(s["bgs"][1], p, (idx + 1) % 2), a)
+    else:
+        base = bg_frame(s["bg"], p, idx % 2)
     base = Image.alpha_composite(base, VIG)
     base = Image.alpha_composite(base, cached(("h", idx), lambda: header_layer(s, idx)))
-    if s.get("key") and t >= s["key_t"]:
-        base = Image.alpha_composite(base, alpha_mul(cached(("k", idx), lambda: key_layer(s)), ease(fadein(t, s["key_t"], 0.6))))
+    kts = s["key_times"]
+    for k, kt0 in enumerate(kts):
+        kend = min(kt0 + 9.0, kts[k + 1] - 0.3 if k + 1 < len(kts) else s["start"] + s["dur"])
+        if kt0 <= t < kend:
+            al = ease(fadein(t, kt0, 0.6)) * min(1.0, (kend - t) / 0.5)
+            base = Image.alpha_composite(base, alpha_mul(cached(("k", idx, k), lambda: key_layer(s, k)), al))
     for k, it in enumerate(s.get("item_t", [])):
         if t >= it:
             base = Image.alpha_composite(base, alpha_mul(cached(("i", idx, k), lambda: item_layer(s, k)), ease(fadein(t, it, 0.45))))
@@ -276,17 +335,18 @@ def pad(total):
     chords = [(220.0, 261.63, 329.63), (174.61, 220.0, 261.63), (261.63, 329.63, 392.0), (196.0, 246.94, 293.66)]
     seg = 8.0
     out = bytearray()
-    n = int(total * SR)
-    for i in range(n):
+    for i in range(int(32 * SR)):
         tt = i / SR
         c = chords[int(tt // seg) % 4]
         ph = (tt % seg) / seg
         env = math.sin(math.pi * ph) ** 0.6
         v = sum(math.sin(2 * math.pi * f * tt) + 0.3 * math.sin(4 * math.pi * f * tt) for f in c) / 3.9
         v += 0.5 * math.sin(2 * math.pi * (c[0] / 2) * tt)
-        v *= env * (0.75 + 0.25 * math.sin(2 * math.pi * 0.2 * tt))
+        v *= env * (0.75 + 0.25 * math.sin(2 * math.pi * 0.25 * tt))
         out += struct.pack("<h", int(v * 9000))
-    return bytes(out)
+    loop = bytes(out)
+    reps = int(total // 32) + 1
+    return (loop * reps)[: int(total * SR) * 2]
 with wave.open(f"{WORK}/music.wav", "wb") as w:
     w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes(pad(TOTAL + 1))
 subprocess.run([FF, "-y", "-loglevel", "error", "-i", f"{WORK}/narration.wav", "-i", f"{WORK}/music.wav",
