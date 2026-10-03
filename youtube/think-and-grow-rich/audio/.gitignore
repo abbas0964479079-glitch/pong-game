@@ -1,0 +1,7 @@
+# ملفات وسيطة قابلة لإعادة التوليد (المقاطع الخام + قائمة الدمج)
+# النص المصدر: ../voiceover-script.txt  —  طريقة إعادة التوليد: ../audio/README-audio.md
+narration-0*.mp3
+narration-raw-pace.mp3
+narration-full.mp3
+list.txt
+part-*.txt
