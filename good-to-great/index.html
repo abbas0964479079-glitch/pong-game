@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>من الجيد إلى العظيم — سكربت وستوري بورد الفيديو</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0B1020; --navy-2:#111935; --navy-3:#161f42;
+    --gold:#E9B949; --gold-soft:#f2d489; --teal:#2EC4B6; --rose:#FF6B6B;
+    --ink:#EAF0FF; --muted:#9AA6C8; --line:rgba(233,185,73,.22);
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:
+      radial-gradient(1100px 600px at 85% -10%, rgba(46,196,182,.13), transparent 60%),
+      radial-gradient(900px 500px at 10% 0%, rgba(233,185,73,.14), transparent 55%),
+      var(--navy);
+    color:var(--ink);
+    font-family:"Cairo","Segoe UI",Tahoma,system-ui,"Helvetica Neue",sans-serif;
+    line-height:1.85; -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--gold)}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 20px 120px}
+
+  /* ---------- top bar ---------- */
+  .topbar{position:sticky;top:0;z-index:40;backdrop-filter:blur(14px);
+    background:rgba(11,16,32,.82);border-bottom:1px solid var(--line)}
+  .topbar-in{max-width:1080px;margin:0 auto;padding:10px 20px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+  .brand{font-weight:900;font-size:15px;letter-spacing:.2px;white-space:nowrap}
+  .brand span{color:var(--gold)}
+  .navlinks{display:flex;gap:6px;flex-wrap:wrap;margin-inline-start:auto}
+  .navlinks a{color:var(--muted);text-decoration:none;font-size:13.5px;padding:6px 11px;border-radius:999px;font-weight:600}
+  .navlinks a:hover{color:var(--ink);background:var(--navy-3)}
+
+  /* ---------- hero ---------- */
+  header.hero{padding:34px 0 6px}
+  .kicker{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--gold);
+    border:1px solid var(--line);background:rgba(233,185,73,.07);padding:6px 14px;border-radius:999px}
+  h1{font-size:clamp(30px,5.2vw,54px);line-height:1.2;margin:16px 0 8px;font-weight:900}
+  h1 em{font-style:normal;color:var(--gold);text-shadow:0 0 40px rgba(233,185,73,.35)}
+  .sub{color:var(--muted);font-size:clamp(15px,2.2vw,18px);max-width:70ch;margin:0 0 22px}
+  .cover{position:relative;border-radius:22px;overflow:hidden;border:1px solid var(--line);
+    box-shadow:0 30px 70px rgba(0,0,0,.55);aspect-ratio:16/9;background:#000}
+  .cover img{width:100%;height:100%;object-fit:cover;display:block}
+  .cover .badge{position:absolute;inset-inline-start:18px;top:18px;background:rgba(11,16,32,.78);
+    border:1px solid var(--line);padding:7px 14px;border-radius:999px;font-size:13px;font-weight:700}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:22px 0 0}
+  .stat{background:linear-gradient(180deg,var(--navy-2),rgba(17,25,53,.55));border:1px solid var(--line);
+    border-radius:14px;padding:14px 16px}
+  .stat b{display:block;font-size:23px;color:var(--gold);font-weight:900;line-height:1.3}
+  .stat small{color:var(--muted);font-size:12.5px}
+
+  /* ---------- player ---------- */
+  .player{margin:26px 0 8px;background:linear-gradient(180deg,var(--navy-2),rgba(17,25,53,.6));
+    border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+  .player-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .play-btn{width:54px;height:54px;border-radius:50%;border:0;cursor:pointer;flex:0 0 auto;
+    background:linear-gradient(145deg,var(--gold),#c9972e);color:#191100;font-size:20px;
+    display:grid;place-items:center;box-shadow:0 8px 26px rgba(233,185,73,.35);transition:transform .15s}
+  .play-btn:hover{transform:scale(1.06)}
+  .player-meta{flex:1 1 240px;min-width:200px}
+  .player-meta .t{font-weight:800;font-size:15px}
+  .player-meta .c{color:var(--muted);font-size:13px}
+  .time{font-variant-numeric:tabular-nums;font-weight:800;color:var(--gold);font-size:14px}
+  .bar{position:relative;height:8px;border-radius:999px;background:rgba(255,255,255,.1);margin-top:14px;cursor:pointer}
+  .bar-fill{position:absolute;inset-block:0;inset-inline-start:0;width:0;border-radius:999px;
+    background:linear-gradient(90deg,var(--teal),var(--gold))}
+  .bar-tick{position:absolute;top:-3px;width:2px;height:14px;background:rgba(255,255,255,.45);border-radius:2px}
+  .scene-buttons{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}
+  .chip{background:var(--navy-3);border:1px solid rgba(255,255,255,.08);color:var(--muted);
+    border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit}
+  .chip:hover{color:var(--ink);border-color:var(--line)}
+  .chip.active{background:rgba(233,185,73,.16);color:var(--gold);border-color:var(--gold)}
+
+  /* ---------- sections ---------- */
+  section{margin-top:58px;scroll-margin-top:70px}
+  .sec-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:6px}
+  h2{font-size:clamp(22px,3.4vw,32px);font-weight:900;margin:0}
+  h2 .num{color:var(--gold)}
+  .hint{color:var(--muted);font-size:14px;margin:0 0 18px}
+
+  /* ---------- scene card ---------- */
+  .scene{background:linear-gradient(180deg,rgba(22,31,66,.75),rgba(17,25,53,.35));
+    border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-bottom:26px;
+    box-shadow:0 20px 50px rgba(0,0,0,.35)}
+  .scene.now{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 24px 60px rgba(233,185,73,.16)}
+  .scene-head{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,.06);
+    background:rgba(11,16,32,.45);flex-wrap:wrap}
+  .scene-no{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-weight:900;
+    background:rgba(233,185,73,.14);color:var(--gold);border:1px solid var(--line);flex:0 0 auto}
+  .scene-head h3{margin:0;font-size:19px;font-weight:900}
+  .scene-head .tc{color:var(--teal);font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+  .scene-head .spacer{margin-inline-start:auto;display:flex;gap:8px;flex-wrap:wrap}
+  .mini{border:1px solid rgba(255,255,255,.12);background:var(--navy-3);color:var(--ink);border-radius:10px;
+    padding:7px 12px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit}
+  .mini:hover{border-color:var(--gold);color:var(--gold)}
+  .scene-body{display:grid;grid-template-columns:1.05fr 1fr;gap:0}
+  @media (max-width:820px){.scene-body{grid-template-columns:1fr}}
+  .thumb{position:relative;background:#05070f;min-height:220px}
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block;aspect-ratio:16/9}
+  .thumb .lbl{position:absolute;bottom:10px;inset-inline-start:10px;background:rgba(11,16,32,.8);
+    border:1px solid var(--line);border-radius:8px;padding:4px 10px;font-size:11.5px;color:var(--muted);direction:ltr}
+  .script{padding:18px 20px}
+  .script h4{margin:0 0 10px;font-size:13px;letter-spacing:.4px;color:var(--teal);font-weight:800}
+  .vo{font-size:16.5px;line-height:2.05;margin:0;white-space:pre-line}
+  .vo strong{color:var(--gold);font-weight:800}
+  .notes{margin-top:16px;padding-top:14px;border-top:1px dashed rgba(255,255,255,.1);
+    display:grid;gap:10px;font-size:13.5px;color:var(--muted)}
+  .notes div{display:flex;gap:9px;align-items:flex-start}
+  .notes b{color:var(--ink);font-weight:800;white-space:nowrap}
+  .onair{font-family:ui-monospace,Menlo,Consolas,monospace;direction:ltr;background:var(--navy-3);
+    border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:3px 9px;color:var(--gold-soft);font-size:12.5px}
+
+  /* ---------- publishing kit ---------- */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media (max-width:820px){.grid2{grid-template-columns:1fr}}
+  .card{background:linear-gradient(180deg,rgba(22,31,66,.7),rgba(17,25,53,.3));
+    border:1px solid var(--line);border-radius:var(--radius);padding:20px}
+  .card h3{margin:0 0 12px;font-size:17px;font-weight:900}
+  ul.tight{margin:0;padding-inline-start:20px}
+  ul.tight li{margin-bottom:9px;font-size:14.5px}
+  .tagbox{display:flex;gap:8px;flex-wrap:wrap}
+  .tag{background:rgba(46,196,182,.12);border:1px solid rgba(46,196,182,.3);color:#9ff0e7;
+    border-radius:999px;padding:5px 12px;font-size:12.5px}
+  pre.desc{white-space:pre-wrap;background:#080c18;border:1px solid rgba(255,255,255,.08);border-radius:12px;
+    padding:16px;font-size:13px;line-height:1.9;max-height:340px;overflow:auto;color:#cfd8f4;direction:rtl}
+  .copy{margin-top:12px}
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  th,td{text-align:start;padding:10px 8px;border-bottom:1px solid rgba(255,255,255,.08);vertical-align:top}
+  th{color:var(--gold);font-size:13px;font-weight:800}
+  .files{display:grid;gap:10px}
+  .file{display:flex;align-items:center;gap:12px;background:var(--navy-3);border:1px solid rgba(255,255,255,.07);
+    border-radius:12px;padding:12px 14px;text-decoration:none;color:var(--ink)}
+  .file:hover{border-color:var(--gold)}
+  .file .ic{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;background:rgba(233,185,73,.14);flex:0 0 auto}
+  .file small{color:var(--muted);display:block;font-size:12.5px}
+  .file b{font-size:14.5px}
+  .warn{background:rgba(255,107,107,.09);border:1px solid rgba(255,107,107,.3);border-radius:12px;
+    padding:14px 16px;font-size:14px;color:#ffd9d9}
+  .warn b{color:#ffb3b3}
+  footer{margin-top:60px;color:var(--muted);font-size:13px;text-align:center;border-top:1px solid var(--line);padding-top:22px}
+  .toast{position:fixed;inset-block-end:24px;inset-inline-start:50%;transform:translateX(50%) translateY(20px);
+    background:var(--gold);color:#191100;font-weight:800;padding:10px 20px;border-radius:999px;opacity:0;
+    transition:.25s;z-index:99;pointer-events:none}
+  .toast.show{opacity:1;transform:translateX(50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-in">
+    <div class="brand">من الجيد إلى العظيم <span>•</span> سكربت الفيديو</div>
+    <nav class="navlinks">
+      <a href="#hook">الهوك</a>
+      <a href="#script">المشاهد</a>
+      <a href="#publish">حزمة النشر</a>
+      <a href="#files">الملفات</a>
+    </nav>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <header class="hero" id="hook">
+    <div class="kicker">🎬 حلقة تفكيك كتاب • جيم كولينز — Good to Great</div>
+    <h1>شركة صيدليات مملة… <em>هزمت إنتل وكوكاكولا</em></h1>
+    <p class="sub">سكربت قصصي كامل + ستوري بورد مرئي + تعليق صوتي جاهز. مبني على دراسة حقيقية شملت 1435 شركة على مدى 40 سنة… و11 شركة فقط نجحت في الطفرة.</p>
+
+    <div class="cover">
+      <img src="images/web/01-thumbnail-hook.jpg" alt="صورة الغلاف: قائد يقف على حافة ويطل على قمة ذهبية">
+      <div class="badge">🖼️ صورة الهوك / الثامبنيل — الرقم 15× هو البطل</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><b>10:51</b><small>مدة التعليق الصوتي الفعلي</small></div>
+      <div class="stat"><b>8</b><small>مشاهد قصصية</small></div>
+      <div class="stat"><b>9</b><small>رسمة توضيحية بصيغة PNG</small></div>
+      <div class="stat"><b>11 / 1435</b><small>الشركات التي نجحت في الدراسة</small></div>
+    </div>
+
+    <div class="player" id="player">
+      <div class="player-row">
+        <button class="play-btn" id="playBtn" aria-label="تشغيل">▶</button>
+        <div class="player-meta">
+          <div class="t" id="nowTitle">التعليق الصوتي الكامل — السكربت كله بصوت واحد</div>
+          <div class="c" id="nowSub">اضغط تشغيل، أو ابدأ من أي مشهد بالأسفل</div>
+        </div>
+        <div class="time"><span id="cur">0:00</span> / 10:51</div>
+      </div>
+      <div class="bar" id="bar"><div class="bar-fill" id="barFill"></div></div>
+      <div class="scene-buttons" id="jump"></div>
+      <audio id="audio" preload="metadata" src="voiceover/full-narration.mp3"></audio>
+    </div>
+  </header>
+
+  <section id="script">
+    <div class="sec-head"><h2><span class="num">01</span> السكربت مشهد بمشهد</h2></div>
+    <p class="hint">كل مشهد فيه: النص الصوتي (VO) + الصورة + النص الذي يظهر على الشاشة + ملاحظة إنتاجية. أزرار «اسمع من هنا» تنقلك مباشرة للثانية الخاصة بالمشهد داخل ملف التعليق الصوتي.</p>
+    <div id="scenes"></div>
+  </section>
+
+  <section id="publish">
+    <div class="sec-head"><h2><span class="num">02</span> حزمة النشر (جاهزة للنسخ)</h2></div>
+    <p class="hint">عناوين، أفكار ثامبنيل، وصف كامل مع الفصول، وكلمات مفتاحية — كلها مبنية على نفس زوايا الهوك.</p>
+
+    <div class="grid2">
+      <div class="card">
+        <h3>🏷️ عناوين مقترحة للفيديو</h3>
+        <ul class="tight">
+          <li><b>شركة صيدليات مملة غلبت إنتل وكوكاكولا… إزاي؟!</b> <span class="tag">أعلى نسبة نقر</span></li>
+          <li>1435 شركة… 11 بس اللي نجحت. والسبب مش اللي بتتوقعه!</li>
+          <li>لو إنت شاطر… يبقى إنت في خطر. ده اللي بيقولوا «من الجيد إلى العظيم»</li>
+          <li>من الجيد إلى العظيم: الكتاب اللي بيشرح لماذا الشركة الذكية أحيانًا تفشل</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>🖼️ أفكار الثامبنيل (قاعدة: 4 كلمات بحد أقصى)</h3>
+        <ul class="tight">
+          <li><b>A</b> — الرقم <span class="onair">15×</span> ضخم + «صيدلية تغلب إنتل!» فوق صورة الغلاف</li>
+          <li><b>B</b> — <span class="onair">1435 → 11</span> على صورة مدينة الرمادي بإضاءة ذهبية لـ11 برجًا</li>
+          <li><b>C</b> — «الجيد هو العدو» على صورة المرآة + الشباك المضيء</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:18px">
+      <h3>📄 الوصف الجاهز (انسخه كما هو)</h3>
+      <pre class="desc" id="desc">هل تعرف أن شركة صيدليات مملة تفوّقت على إنتل وجنرال إلكتريك وكوكاكولا مجتمعين؟
+في هذا الفيديو نفكك كتاب «من الجيد إلى العظيم» لجيم كولينز، الذي بُني على دراسة 1435 شركة على مدى 40 سنة… وخرج بـ11 شركة فقط نجحت في الطفرة.
+
+نغوص في القصص الحقيقية:
+• داروين سميث الذي باع مطاحن شركته وأنقذها — ثم هزم بروكتر آند غامبل.
+• ديفيد ماكسويل الذي حوّل خسارة مليون دولار يوميًا إلى ربح 4 ملايين في اليوم.
+• مفارقة ستوكدايل: كيف تُصرّ على النصر وأنت تعانق أقسى الحقائق؟
+• مفهوم القنفذ: ثلاث دوائر تقرر مصير كل قرار تتخذه.
+• الدولاب الثقيل: لماذا لا تحدث الطفرة بضربة واحدة أبدًا؟
+
+⏱️ الفصول:
+00:00 الشركة المملة التي هزمت الجميع
+01:06 تجربة 1435 شركة… و11 فقط
+02:02 الشخص قبل الاتجاه — فاني ماي
+03:08 القيادة من المستوى الخامس — داروين سميث
+04:55 مواجهة الحقائق المرّة — مفارقة ستوكدايل
+06:33 مفهوم القنفذ والدوائر الثلاث
+08:16 الانضباط والدولاب الثقيل
+09:50 الطفرة تبدأ منك
+
+📌 إذا فتح الفيديو لك بابًا: اكتب في التعليقات الحاجة التي ستتوقف عن عملها اليوم.
+🔔 اشترك في القناة لمزيد من تفكيك الكتب الكبرى بأسلوب قصصي.</pre>
+      <button class="mini copy" data-copy="#desc">📋 انسخ الوصف</button>
+    </div>
+
+    <div class="grid2" style="margin-top:18px">
+      <div class="card">
+        <h3>🔍 الكلمات المفتاحية والوسوم</h3>
+        <div class="tagbox">
+          <span class="tag">من الجيد إلى العظيم</span><span class="tag">جيم كولينز</span>
+          <span class="tag">ملخص كتاب</span><span class="tag">تطوير الذات</span>
+          <span class="tag">ريادة أعمال</span><span class="tag">الإدارة</span><span class="tag">القيادة</span>
+          <span class="tag">قيادة المستوى الخامس</span><span class="tag">مفهوم القنفذ</span>
+          <span class="tag">الدولاب</span><span class="tag">نوكور</span><span class="tag">وولجرينز</span>
+          <span class="tag">كيمبرلي كلارك</span><span class="tag">فاني ماي</span>
+          <span class="tag">ملخصات كتب صوتية</span><span class="tag">Good to Great</span>
+        </div>
+        <p class="hint" style="margin-top:14px">#ملخصات_كتب #تطوير_الذات #ريادة_أعمال #قيادة #كتب_صوتية #من_الجيد_إلى_العظيم</p>
+      </div>
+      <div class="card">
+        <h3>✅ قواعد الإنتاج (لا تخالفها)</h3>
+        <table>
+          <tr><td>❌ لا مقدمة ترحيبية قبل الهوك</td><td>أول 15 ثانية = الرقم + التناقض</td></tr>
+          <tr><td>🔢 الرقم 1435 يظهر مرة واحدة</td><td>حتى يترسّخ في الذاكرة</td></tr>
+          <tr><td>✂️ قطع حاد بين المشاهد</td><td>لا انتقالات ناعمة</td></tr>
+          <tr><td>🔍 زوم 5% بطيء داخل كل صورة</td><td>Ken Burns لمنع الإحساس بالثبات</td></tr>
+          <tr><td>🤫 نصف ثانية صمت</td><td>بعد «يحرق السفينة» و«ماتوا من الحزن»</td></tr>
+          <tr><td>❓ سؤال مفتوح كل دقيقة</td><td>Open loop يجبر المشاهد إنه يكمّل</td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section id="files">
+    <div class="sec-head"><h2><span class="num">03</span> الملفات الجاهزة</h2></div>
+    <p class="hint">كل حاجة في مجلد <span class="onair">good-to-great/</span> داخل المستودع.</p>
+    <div class="files">
+      <a class="file" href="script.md" download>
+        <span class="ic">📝</span>
+        <span><b>script.md</b><small>السكربت الكامل + خريطة الفيديو + ملاحظات الأداء</small></span>
+      </a>
+      <a class="file" href="voiceover/full-narration.mp3">
+        <span class="ic">🎧</span>
+        <span><b>voiceover/full-narration.mp3</b><small>التعليق الصوتي الكامل — 10:51 دقيقة (نسخة واحدة متصلة)</small></span>
+      </a>
+      <a class="file" href="voiceover/chapters.txt">
+        <span class="ic">⏱️</span>
+        <span><b>voiceover/chapters.txt</b><small>فصول يوتيوب بتوقيتات حقيقية — انسخها في الوصف</small></span>
+      </a>
+      <a class="file" href="images/01-thumbnail-hook.png" download>
+        <span class="ic">🖼️</span>
+        <span><b>images/ (9 صور PNG عالية الجودة)</b><small>مقاسات 16:9 — جاهزة للمونتاج، والنسخ المضغوطة في images/web/</small></span>
+      </a>
+      <a class="file" href="voiceover/scene-01-hook.mp3">
+        <span class="ic">🎙️</span>
+        <span><b>voiceover/scene-01..08.mp3</b><small>التعليق مقسّم مشهد بمشهد (أسهل في المونتاج) + نصوصه في ملفات .txt</small></span>
+      </a>
+    </div>
+
+    <div class="warn" style="margin-top:20px">
+      <b>ملاحظة أمانة المحتوى:</b> الأرقام والقصص مأخوذة من الكتاب نفسه (دراسة 1435 شركة → 11 شركة، أداء وولجرينز مقابل إنتل وكوكاكولا، داروين سميث وكيمبرلي-كلارك، فاني ماي، نوكور، مفارقة ستوكدايل).
+      وقد استُخدمت بعض التفاصيل لتوضيح النبرة الدرامية دون المساس بصحة الوقائع.
+    </div>
+  </section>
+
+  <footer>
+    صُنع كحزمة إنتاج كاملة: سكربت + صوت + رسومات + ستوري بورد — «من الجيد إلى العظيم» لجيم كولينز.
+  </footer>
+</div>
+
+<div class="toast" id="toast">تم النسخ ✅</div>
+
+<script>
+/* ================= data ================= */
+const SCENES = [
+  {
+    n: 1, id: "hook-scene", title: "الهوك: صيدلية مملة تهزم إنتل وكوكاكولا",
+    tc: "0:00 – 1:06", start: 0, img: "images/web/01-thumbnail-hook.jpg", imgName: "01-thumbnail-hook.png",
+    onair: "1$ → 15×",
+    vo: `في سنة 1975، لو حطّيت دولارًا واحدًا في شركة صيدليات مملة اسمها «وولجرينز»، كان ممكن يتحوّل إلى ما يفوق استثمارك في «إنتل» و«جنرال إلكتريك» و«كوكاكولا». وبحلول سنة 2000، سبق السوق الأميركي كله بخمسة عشر ضعفًا.
+
+والغريب؟ أن الشركة دي عاشت أربعين سنة… عادية تمامًا. مفيش عبقرية، مفيش قائد أسطوري، ومفيش اختراع سحري.
+
+والأغرب: كل الشركات اللي فشلت في الطفرة كانت عندها نفس الفرص، ونفس السوق، ونفس الموارد.
+
+الفرق ما كانش في الذكاء… كان في حاجة أخطر بكتير، اسمها «الرضا بالجيد».
+
+فريق بحث قعد خمس سنين، ودرس 1435 شركة على مدى أربعين سنة… وطلع بـ11 شركة بس. والناتج كان صادمًا: القائد العبقري مش هو السبب، والخطة الجديدة مش هي السبب، والتكنولوجيا مش هي السبب.
+
+استنّى الفيديو لآخره، لأن الفكرة الأخيرة هي اللي بتفرّق بين اللي بيطمح… واللي بيوصل.`,
+    notes: [["🎙️ نبرة", "الجملة «والغريب؟» تُقال هامسة، ثم «والأغرب:» تنخفض أكثر. لا ترفع الصوت — الهدوء مع الأرقام أخطر من الصراخ."],
+            ["🎵 موسيقى", "إيقاع منخفض غامض + ضربة معدن عند «15 ضعفًا»."],
+            ["🖥️ على الشاشة", "الأرقام تظهر بأسلوب عدّاد تصاعدي: 1$ ← 15×"]]
+  },
+  {
+    n: 2, id: "study", title: "التجربة التي قلبت كل الفروض",
+    tc: "1:06 – 2:02", start: 66.8, img: "images/web/02-study-1435.jpg", imgName: "02-study-1435.png",
+    onair: "1435 → 11",
+    vo: `خُد بالك من حجم التجربة: ألف وأربعمية وخمسة وتلاتين شركة، وأربعين سنة من الأرقام.
+
+وكل شركة دخلت الاختبار كان لازم تعدّي شرطين قاسيين. الأول: يبقى فيه لحظة تحوّل واضحة، قبلها كانت الشركة عادية، وبعدها انطلقت. والثاني: الطفرة دي متكونش بسبب ازدهار السوق كله… لازم تكون الشركة نفسها هي اللي فعلتها.
+
+والنتيجة؟ من 1435… نجحت 11 بس. أقل من واحد في المية.
+
+وفي اللحظة اللي وصلوا فيها للرقم ده، حصلت الصدمة: كل الفروض اللي كنا فاكرينها عن النجاح، طلعت غلط. عشر من الأحد عشر قائدًا جاءوا من داخل الشركة، مش من برّا. والحوافز المالية الضخمة للمديرين؟ مكنتش موجودة. والاستراتيجية العبقرية؟ لا.
+
+فإيه اللي كان موجود؟ ست قرارات. تعال نبدأ بأغربهم واحدة.`,
+    notes: [["🎬 مونتاج", "زوم بطيء للداخل على مدينة الأبراج. الرقم «1435» يتلاشى ويظهر مكانه «11»."],
+            ["🎯 وظيفة المشهد", "بناء المصداقية (دراسة ضخمة) + كسر التوقعات (الأساطير كلها غلط)."]]
+  },
+  {
+    n: 3, id: "first-who", title: "الأول «مين»… ثم «إيه» — قصة فاني ماي",
+    tc: "2:02 – 3:08", start: 122.6, img: "images/web/05-bus-first-who.jpg", imgName: "05-bus-first-who.png",
+    onair: "-1,000,000$ / يوم ← +4,000,000$ / يوم",
+    vo: `تخيّل معايا المشهد: سنة 1981، شركة «فاني ماي» بتخسر مليون دولار… كل يوم شغل. مش كل شهر، كل يوم.
+
+رئيس جديد اسمه «ديفيد ماكسويل» بياخد القيادة. وفي أول لحظاته عمل حاجة غريبة جدًا: بدل ما يلمّ الفريق ويقول لهم «الخطة الجديدة هي كذا»، قعد يقابل كل مدير، واحد واحد، ويسأله سؤالًا واحدًا: «إنت مستعد تشتغل في مكان من الطراز الأول؟ ولا إنت مبسوط بالعادي؟»
+
+اللي مش مستعد… ساعده إنه يمشي بكرامة. مش لأنه فاشل، لكن لأن مكانه مش هنا.
+
+لأن ماكسويل كان مؤمنًا بحاجة واحدة: الناس مش أهم مورد عندك… الناس الصح هم أهم مورد عندك.
+
+النتيجة؟ في تسع سنين، الشركة تحوّلت من خسارة مليون دولار في اليوم… لأربعة ملايين دولار ربح في اليوم.
+
+ودرس المشهد ده جملة واحدة: الأول «مين»… وبعدين «إيه». مش العكس.
+
+كتير منّا بيسأل نفسه: «أعمل إيه؟» ويسبقها بـ«مع مين أنا حواليا؟» وهي المفروض تيجي الأول.`,
+    notes: [["🔊 مؤثر", "قطع حاد عند «مليون دولار كل يوم» + صوت باب باص يُغلق."],
+            ["🖥️ على الشاشة", "«الأول: مين» بخط ضخم — الرسالة اللي المفروض تفضل في دماغ المشاهد."]]
+  },
+  {
+    n: 4, id: "level5", title: "المستوى الخامس: الغريب الذي حرق سفينته",
+    tc: "3:08 – 4:55", start: 188.2, img: "images/web/03-kimberly-clark.jpg", img2: "images/web/04-level5-window-mirror.jpg",
+    imgName: "03-kimberly-clark.png + 04-level5-window-mirror.png",
+    onair: "25 سنة • 6 من 8 • 19 سنة",
+    vo: `هنا تظهر أغرب شخصية في الكتاب.
+
+سنة 1971، شركة «كيمبرلي-كلارك» — عملاق الورق — بتعيّن محاميًا هاديًا، خجولًا، بشعر أبيض ونظارة سميكة، اسمه «داروين سميث». عضو في مجلس الإدارة قال عنه بالحرف: «مكانش مادة رئيس تنفيذي». ولو شفته ماشي في الشارع، مش هتبصّله تاني.
+
+القرار الأول اللي خده؟ يبيع مطاحن الورق… يعني أساس الشركة كلها. يحرق السفينة… وهو على متنها.
+
+الإدارة والصحافة والمحللون قالوا إنه فقد عقله. الصحافة وصفت الخطوة بالحماقة، وتقييم السهم نزل. وسميث ولا اهتزّ.
+
+وبعد خمسة وعشرين سنة… كيمبرلي-كلارك اشترت منافسها العملاق «سكوت بيبر» بالكامل، وهزمت شركة كانت بتتوصف بأنها لا تُقهَر — «بروكتر آند غامبل» — في ست من ثمانية فئات منتجات.
+
+وفي وسط القصة دي كلها، حصلت حاجة أقسى: سنة 1985، تشخّص بسرطان في الحلق، وقالوا له إن اللي فاضل له سنة تقريبًا. مسك مدير الشغل العادي، وعيّن نائبًا له، وكمّل. وعاش تسعتاشر سنة تانية.
+
+وعند التقاعد، لخّص كل حياته في جملة واحدة: «أنا ما توقفتش أبدًا عن محاولة أن أكون مؤهلًا للوظيفة».
+
+ده هو المستوى الخامس: تواضع شخصي… مع إرادة مهنية نار.
+
+أما الشركات اللي فشلت، فالقصة كانت معكوسة تمامًا: الرئيس بيبص في المرآة وقت النجاح، وياخد الفضل لنفسه، ولما تحصل الكارثة… بيبص من الشباك ويلوم الظروف والناس.
+
+القائد من المستوى الخامس بيعمل العكس: ينظر من الشباك ليعطي الفضل لفريقه وللحظ، وينظر في المرآة… ليحاسب نفسه.`,
+    notes: [["⏸️ صمت", "توقف تام لثانية كاملة عند «مطاحن الورق» — الصمت هنا يشتري انتباه المشاهد."],
+            ["🖼️ الصور", "ابدأ بصورة المصنع، وانتقل لصورة المرآة/الشباك مع الجملة الأخيرة."],
+            ["❤️ موقع الذروة العاطفية", "قصة السرطان هي أعلى نقطة عاطفية في الفيديو كله — لا تعلو عليها موسيقى."]]
+  },
+  {
+    n: 5, id: "brutal", title: "مواجهة الحقائق المرّة — مفارقة ستوكدايل",
+    tc: "4:55 – 6:33", start: 295.2, img: "images/web/06-stockdale-facts.jpg", imgName: "06-stockdale-facts.png",
+    onair: "إيمان ثابت + حقائق قاسية",
+    vo: `وصلنا للفكرة اللي لوحدها ممكن تغيّر سنين من عمرك.
+
+في حرب فيتنام كان فيه أسير أميركي اسمه «جيمس ستوكدايل»، قعد في السجون سبع سنين، وتعرض للتعذيب. وبعد الحرب، سأل جيم كولينز واحدًا من أقوى أسئلته: مين اللي مات في المعسكر؟
+
+والجواب كان مرعبًا: «التفاؤلون. اللي كانوا بيقولوا هنخرج قبل الكريسماس… وبعدها هنخرج قبل عيد الفصح… وبعدها ماتوا من الحزن.»
+
+المفارقة كلها في سطرين: لازم تعيش بإيمان ثابت إنك هتنتصر في النهاية… وفي نفس الوقت تواجه أقسى حقائق واقعك، من غير مجاملة. الإيمان بلا حقائق = وهم. والحقائق بلا إيمان = استسلام.
+
+ودي بالظبط اللي بتفرّق شركة عن شركة. جيمس نفسه فهم إن أي قائد شخصيته قوية، هيلاقي فريقه بيجمّل له الحقائق عشان ما يزعّلوهوش. فإيه الحل؟ إنك تسأل أسئلة، بدل ما تدّي إجابات. وإنك تخلي الجدال عاديًا، مسموحًا، وحتى صحيًا.
+
+في شركة الصلب «نوكور»، كان الاجتماع بيوصل لدرجة إن الناس بتزعق، والوجوه بتحمر، والأيدي بتضرب على الترابيزة… وبعدها بيطلعوا بقرار. وفي نفس الشركة، في سنة صعبة، اتخدت القرارات بتحدّي: الإدارة العليا خدت أكبر نصيب من الألم، وامتيازاتهم كانت أقل من العمال. العمال أنفسهم كان عندهم حق في تعليم أولادهم. ولما الشركة تكسب… كل الناس تكسب.
+
+الشجاعة مش إنك تنكر الواقع. الشجاعة إنك تبصّله في عينه… وتقول: أنا لسه هكسب.`,
+    notes: [["🎵 موسيقى", "وترية حزينة خفيفة تدخل عند «التفاؤلون»."],
+            ["🖥️ على الشاشة", "دائرة تنقسم نصفين: «إيمان ثابت» + «حقائق قاسية»."],
+            ["💡 الرسالة المحورية", "خلي المشاهد يسمع جملة: «الإيمان بلا حقائق = وهم»، ويعيدها معك."]]
+  },
+  {
+    n: 6, id: "hedgehog", title: "مفهوم القنفذ والدوائر الثلاث",
+    tc: "6:33 – 8:16", start: 393.7, img: "images/web/07-hedgehog-three-circles.jpg", imgName: "07-hedgehog-three-circles.png",
+    onair: "الأفضل في العالم + المحرك الاقتصادي + الشغف",
+    vo: `من القصص القديمة تجيب لنا الفكرة الأهم: الثعلب عنده ألف حيلة… والقنفذ عنده حيلة واحدة يعرفها بامتياز. الثعلب بيخطط بشتى الطرق، وفي الآخر القنفذ بيكسب.
+
+الشركات العظيمة كانت قنافذ. كان عندها فهم واحد بسيط وعميق، بيظهر في تقاطع ثلاث دوائر:
+
+أولًا: إيه اللي إحنا ممكن نكون الأفضل فيه في العالم؟ وكمان، إيه اللي إحنا مستحيل نكون الأفضل فيه؟ لأن دي أشقّ من الأولى.
+
+ثانيًا: إيه المحرك الاقتصادي بتاعنا؟ الكتاب يقول: اختار مُقامًا واحدًا واربح، رِبح لكل عامل، رِبح لكل محل، رِبح لكل عميل… رقم واحد تكبر بيه.
+
+ثالثًا: إيه اللي بتشتغل فيه بشغف حقيقي؟
+
+والتقاطع بينهم هو بوصلة القرارات.
+
+خُد وولجرينز مثالًا حيًا: القياس عندهم كان «رِبح لكل زيارة عميل»، مش «رِبح لكل محل». الاسم يبان بسيط، لكنه قلب استراتيجية كاملة. بدل ما يفتحوا فروعًا في أماكن رخيصة بعيدة، قفلوا فروعًا ناجحة تمامًا وفتحوا غيرها في مواقع أنسب… حتى لو خسروا في إيجار قديم ملايين. وفي وسط المدينة، قفلوا تسعة فروع في مربع مايل واحد. والأغرب: عندهم فكرة إنك ممنوع تمشي أكتر من كام شارع من غير ما تقابلك فرع. وبعد كل ده؟ الشركة دخلت مجال أكل وتغذية… وقفلته كله واستقالت منه. مش لأنهم فاشلون فيه… لكن لأنه ما كانش في دوائرهم الثلاث.
+
+يعني: العظماء ما كانش عندهم فقط قائمة «أعمل إيه»… كان عندهم قائمة «أبطّل أعمل إيه». وتلك القائمة كانت بنفس طول الأولى… ويمكن أهم.`,
+    notes: [["🖥️ أنيميشن", "الدوائر الثلاث تظهر واحدة تلو الأخرى، ثم يُضاء التقاطع بينها بالذهبي."],
+            ["💓 صوت", "دقّات قلب هادئة تتسارع قليلًا حتى لحظة إضاءة التقاطع."],
+            ["🔑 أهم جملة في الحلقة", "«قائمة أبطّل أعمل إيه… بنفس طول قائمة أعمل إيه»."]]
+  },
+  {
+    n: 7, id: "flywheel", title: "الانضباط والدولاب الثقيل (Flywheel)",
+    tc: "8:16 – 9:50", start: 496.4, img: "images/web/08-flywheel.jpg", imgName: "08-flywheel.png",
+    onair: "زحف ← امشي ← اجرِ",
+    vo: `وعشان تفهم الانضباط صح: ما كانش معناه مديرًا متسلطًا أو نظامًا خنّاقًا. الانضباط الحقيقي كان انضباط الناس أنفسهم. تختار ناسًا منضبطة، مش محتاجة رقابة، وبعدها بتدير النظام… مش الناس. وبتديهم حرية كاملة جوه إطار واضح.
+
+والمفارقة إن الدولاب الثقيل ده ما بيدورش بضربة واحدة. مفيش فكرة عبقرية في يوم واحد، ومفيش برنامج جديد، ومفيش مؤتمر كبير. المؤسسات العظيمة نفسها ما كانتش مدركة إنها بتحقق طفرة! ما كانش فيه اسم للحملة، ولا شعار، ولا حفل إطلاق.
+
+هي بس عجلة ثقيلة… تدفعها، وترجع تدفعها، وترجع تدفعها. وفي الأول ما تتحركش، وبعدين تتلوى، ثم تلف، ثم تلف بسرعة، والنتيجة إنك تكتشف إن العجلة بتجري لوحدها.
+
+ودي عكس الـ«دولاب المتلخبط» اللي بيظهر في الشركات اللي فشلت: نتائج مخيّبة، فييجي رد فعل… فاتجاه جديد: رئيس جديد، برنامج جديد، اكتساب شركة جديدة، وبعدها… صفر زخم. وبعدين يتكرر المشهد، وكل لفة تهبط لتحت.
+
+آخر حاجة، والتكنولوجيا: الكتاب كان مفاجئًا هنا. عشرات الاجتماعات سألوا القادة العظماء: إيه أهم عوامل نجاحكم؟ أقل من عشرين في المية بس من ذكر التكنولوجيا. كمان شركة عملاقة زي وولجرينز ما دخلتش السباق بالهلع، دخلت بمنطق: زحف، امشي، اجرِ. فالتكنولوجيا مسرّع… لكنها مش محرك. المحرك دايمًا كان دولابك أنت.`,
+    notes: [["🎚️ صوت", "تسارع تدريجي: صوت الدولاب يزيد مع كل لفة حتى نقطة الانفجار ثم يهدأ."],
+            ["🖥️ على الشاشة", "رسم متحرك لعجلة ثقيلة تُدفع ببطء… ثم تتسارع فجأة."],
+            ["⚠️ احترس", "لا تقل «المفتاح هو التكنولوجيا» — الكتاب يقول العكس تمامًا."]]
+  },
+  {
+    n: 8, id: "outro", title: "الخاتمة: الطفرة تبدأ منك",
+    tc: "9:50 – 10:51", start: 590.6, img: "images/web/09-the-leap.jpg", imgName: "09-the-leap.png",
+    onair: "اكتب: أبطّل إيه؟",
+    vo: `الكتاب ده ما هوش كتاب عن شركات. هو كتاب عنك.
+
+الجيد هو عدو العظيم، ودايمًا هيكون أسهل إنك تقنع نفسك إن «اللي إحنا فيه كويس». لكن ست قرارات بتفرق: مين حواليك قبل إيه اللي بتعمله، والتواضع مع إرادة نار، وإنك تواجه حقائقك بدل ما تهرب منها، وإنك تعرف نقطة تقاطع دوائرك الثلاث، وإنك تبني انضباطًا طويل النفس، وتعرف إن العجلة بتفشل في أول لفات… وبتنجح في الآخر.
+
+وخُد تمرينًا صغيرًا: اكتب في ورقة ثلاث حاجات «هتبطّل» تعملها. مش هتعمل إيه… هتبطّل إيه. لأن الطفرة بتبدأ من الفراغ اللي بتصنعه… مش من الحماس اللي بتحسّه.
+
+ولو الفيديو ده فتح لك حاجة، اكتب في التعليقات كلمة واحدة من الحاجات اللي هتبطّل تعملها من النهاردة. واشترك في القناة… لأن الفيديو الجاي هيكون عن الكتاب اللي بيكمّل القصة دي.
+
+وبالتوفيق في الطفرة.`,
+    notes: [["🎯 CTA", "اطلب تعليقًا محددًا: «اكتب حاجة واحدة هتبطّل تعملها» — أعلى تفاعل من «اكتب رأيك»."],
+            ["🔁 حلقة مفتوحة", "اذكر أن الحلقة القادمة تكمّل القصة (تشويق قبل النهاية)."]]
+  }
+];
+
+/* ================= render ================= */
+const scenesEl = document.getElementById('scenes');
+const jumpEl = document.getElementById('jump');
+
+SCENES.forEach(s => {
+  const imgs = s.img2
+    ? `<div class="thumb" style="display:grid;grid-template-rows:1fr 1fr">
+         <img src="${s.img}" alt="مشهد ${s.n}"><img src="${s.img2}" alt="مشهد ${s.n} - صورة ثانية">
+       </div>`
+    : `<div class="thumb"><img src="${s.img}" alt="مشهد ${s.n}"></div>`;
+  const el = document.createElement('article');
+  el.className = 'scene';
+  el.id = s.id;
+  el.innerHTML = `
+    <div class="scene-head">
+      <div class="scene-no">${s.n}</div>
+      <div>
+        <h3>${s.title}</h3>
+        <div class="tc">${s.tc}</div>
+      </div>
+      <div class="spacer">
+        <button class="mini js-play" data-start="${s.start}">▶ اسمع من هنا</button>
+        <button class="mini js-copy" data-vo="${s.n}">📋 انسخ النص</button>
+      </div>
+    </div>
+    <div class="scene-body">
+      ${imgs}
+      <div class="script">
+        <h4>النص الصوتي (VO)</h4>
+        <p class="vo" id="vo-${s.n}">${s.vo}</p>
+        <div class="notes">
+          <div><b>النص على الشاشة:</b><span class="onair">${s.onair}</span></div>
+          ${s.notes.map(([k,v])=>`<div><b>${k}:</b><span>${v}</span></div>`).join('')}
+          <div><b>الصورة:</b><span class="onair">${s.imgName}</span></div>
+        </div>
+      </div>
+    </div>`;
+  scenesEl.appendChild(el);
+
+  const chip = document.createElement('button');
+  chip.className = 'chip';
+  chip.dataset.start = s.start;
+  chip.dataset.scene = s.id;
+  chip.textContent = `${s.n}. ${s.title.split(':')[0]}`;
+  chip.onclick = () => playFrom(s.start, s.id, chip);
+  jumpEl.appendChild(chip);
+});
+
+/* ================= audio ================= */
+const audio = document.getElementById('audio');
+const playBtn = document.getElementById('playBtn');
+const barFill = document.getElementById('barFill');
+const cur = document.getElementById('cur');
+const bar = document.getElementById('bar');
+const nowTitle = document.getElementById('nowTitle');
+const nowSub = document.getElementById('nowSub');
+
+function fmt(t){ if(!isFinite(t)) t = 0; const m = Math.floor(t/60), s = Math.floor(t%60); return m + ':' + String(s).padStart(2,'0'); }
+
+/* ticks on the progress bar for each scene */
+SCENES.slice(1).forEach(s => {
+  const t = document.createElement('div');
+  t.className = 'bar-tick';
+  t.style.insetInlineStart = (s.start / 651.5 * 100) + '%';
+  bar.appendChild(t);
+});
+
+let activeChip = null, activeScene = null;
+function setActive(sceneId){
+  document.querySelectorAll('.scene').forEach(e => e.classList.remove('now'));
+  document.querySelectorAll('.chip').forEach(e => e.classList.remove('active'));
+  if (sceneId){
+    const sc = document.getElementById(sceneId); if (sc) sc.classList.add('now');
+    const chip = [...document.querySelectorAll('.chip')].find(c => c.dataset.scene === sceneId);
+    if (chip){ chip.classList.add('active'); activeChip = chip; }
+    const s = SCENES.find(x => x.id === sceneId);
+    if (s){ nowTitle.textContent = 'المشهد ' + s.n + ': ' + s.title; nowSub.textContent = 'يبدأ عند ' + fmt(s.start) + ' — المدة ' + s.tc; }
+  }
+}
+function playFrom(start, sceneId, chip){
+  audio.currentTime = start;
+  audio.play().catch(()=>{});
+  setActive(sceneId || (chip && chip.dataset.scene));
+}
+function sceneAt(t){ let c = SCENES[0]; SCENES.forEach(s => { if (t >= s.start - .4) c = s; }); return c; }
+
+playBtn.onclick = () => audio.paused ? audio.play() : audio.pause();
+audio.addEventListener('play', ()=>{ playBtn.textContent = '❚❚'; });
+audio.addEventListener('pause', ()=>{ playBtn.textContent = '▶'; });
+audio.addEventListener('timeupdate', () => {
+  cur.textContent = fmt(audio.currentTime);
+  barFill.style.width = (audio.currentTime / (audio.duration || 651.5) * 100) + '%';
+  const s = sceneAt(audio.currentTime);
+  if (s && (!activeScene || activeScene !== s.id)){ activeScene = s.id; setActive(s.id); }
+});
+bar.onclick = e => {
+  const r = bar.getBoundingClientRect();
+  const p = 1 - ((e.clientX - r.left) / r.width); /* RTL */
+  audio.currentTime = p * (audio.duration || 651.5);
+};
+jumpEl.addEventListener('click', e => {
+  const c = e.target.closest('.chip'); if (!c) return;
+  playFrom(parseFloat(c.dataset.start), c.dataset.scene, c);
+});
+scenesEl.addEventListener('click', e => {
+  const p = e.target.closest('.js-play'); if (!p) return;
+  const sc = p.closest('.scene');
+  playFrom(parseFloat(p.dataset.start), sc.id);
+});
+// auto-play a scene if the URL hash points to one
+if (location.hash && document.getElementById(location.hash.slice(1))){
+  const id = location.hash.slice(1), s = SCENES.find(x => x.id === id);
+  if (s) setActive(id);
+}
+
+/* ================= copy ================= */
+const toast = document.getElementById('toast');
+function showToast(msg){ toast.textContent = msg || 'تم النسخ ✅'; toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'), 1600); }
+async function copyText(txt, msg){
+  try { await navigator.clipboard.writeText(txt); showToast(msg); }
+  catch(e){
+    const ta = document.createElement('textarea');
+    ta.value = txt; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); showToast(msg); } catch(_){ showToast('تعذّر النسخ — انسخ يدويًا'); }
+    ta.remove();
+  }
+}
+scenesEl.addEventListener('click', e => {
+  const b = e.target.closest('.js-copy'); if (!b) return;
+  const vo = document.getElementById('vo-' + b.dataset.vo);
+  copyText(vo.innerText, 'تم نسخ نص المشهد ✅');
+});
+document.querySelectorAll('[data-copy]').forEach(b => {
+  b.onclick = () => copyText(document.querySelector(b.dataset.copy).innerText, 'تم نسخ الوصف ✅');
+});
+</script>
+</body>
+</html>
