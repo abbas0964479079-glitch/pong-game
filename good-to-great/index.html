@@ -157,6 +157,7 @@
   <div class="topbar-in">
     <div class="brand">من الجيد إلى العظيم <span>•</span> سكربت الفيديو</div>
     <nav class="navlinks">
+      <a href="#video">الفيديو</a>
       <a href="#hook">الهوك</a>
       <a href="#script">المشاهد</a>
       <a href="#publish">حزمة النشر</a>
@@ -198,6 +199,22 @@
       <audio id="audio" preload="metadata" src="voiceover/full-narration.mp3"></audio>
     </div>
   </header>
+
+  <section id="video">
+    <div class="sec-head"><h2><span class="num">00</span> الفيديو الجاهز <span class="tag" style="vertical-align:middle">1080p • MP4</span></h2></div>
+    <p class="hint">الفيديو كامل جاهز في مساحة العمل: الصور + الرسوم المتحركة + الترجمة العربية + التعليق الصوتي — بدون أي مونتاج من ناحيتك.</p>
+    <video id="vid" controls preload="metadata" playsinline
+           poster="video/out/thumbnail-15x.jpg"
+           style="width:100%;border-radius:20px;border:1px solid var(--line);background:#000;box-shadow:0 30px 70px rgba(0,0,0,.55);aspect-ratio:16/9">
+      <source src="video/out/good-to-great-1080p.mp4" type="video/mp4">
+      المتصفح لا يدعم تشغيل الفيديو.
+    </video>
+    <div class="stats" style="margin-top:16px">
+      <div class="stat"><b>10:51</b><small>المدة • 1920×1080 • 30fps</small></div>
+      <div class="stat"><b>MP4 / H.264</b><small>جاهز للرفع على يوتيوب مباشرة</small></div>
+      <div class="stat"><b>video/out/</b><small>الفيديو + الثامبنيلات الثلاثة</small></div>
+    </div>
+  </section>
 
   <section id="script">
     <div class="sec-head"><h2><span class="num">01</span> السكربت مشهد بمشهد</h2></div>
@@ -288,6 +305,14 @@
     <div class="sec-head"><h2><span class="num">03</span> الملفات الجاهزة</h2></div>
     <p class="hint">كل حاجة في مجلد <span class="onair">good-to-great/</span> داخل المستودع.</p>
     <div class="files">
+      <a class="file" href="video/out/good-to-great-1080p.mp4">
+        <span class="ic">🎬</span>
+        <span><b>video/out/good-to-great-1080p.mp4</b><small>الفيديو الكامل 1080p — صوت + صورة + ترجمة (جاهز للرفع)</small></span>
+      </a>
+      <a class="file" href="video/out/thumbnail-15x.jpg">
+        <span class="ic">📷</span>
+        <span><b>video/out/thumbnail-*.jpg</b><small>ثلاث صور ثامبنيل 1280×720 مستخرجة من الفيديو نفسه</small></span>
+      </a>
       <a class="file" href="script.md" download>
         <span class="ic">📝</span>
         <span><b>script.md</b><small>السكربت الكامل + خريطة الفيديو + ملاحظات الأداء</small></span>
@@ -555,6 +580,7 @@ SCENES.slice(1).forEach(s => {
   bar.appendChild(t);
 });
 
+const vid = document.getElementById('vid');
 let activeChip = null, activeScene = null;
 function setActive(sceneId){
   document.querySelectorAll('.scene').forEach(e => e.classList.remove('now'));
@@ -568,14 +594,15 @@ function setActive(sceneId){
   }
 }
 function playFrom(start, sceneId, chip){
-  audio.currentTime = start;
-  audio.play().catch(()=>{});
+  if (vid && vid.readyState > 0 && !vid.paused){ vid.currentTime = start; vid.play().catch(()=>{}); }
+  else { audio.currentTime = start; audio.play().catch(()=>{}); }
   setActive(sceneId || (chip && chip.dataset.scene));
 }
 function sceneAt(t){ let c = SCENES[0]; SCENES.forEach(s => { if (t >= s.start - .4) c = s; }); return c; }
 
 playBtn.onclick = () => audio.paused ? audio.play() : audio.pause();
-audio.addEventListener('play', ()=>{ playBtn.textContent = '❚❚'; });
+audio.addEventListener('play', ()=>{ playBtn.textContent = '❚❚'; if (vid && !vid.paused) vid.pause(); });
+if (vid) vid.addEventListener('play', ()=>{ if (!audio.paused) audio.pause(); });
 audio.addEventListener('pause', ()=>{ playBtn.textContent = '▶'; });
 audio.addEventListener('timeupdate', () => {
   cur.textContent = fmt(audio.currentTime);
